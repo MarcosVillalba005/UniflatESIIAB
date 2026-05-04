@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniFlat ESIIAB | Registro Profesional y Accesible</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --uclm-red: #8B0000;
+            --uclm-red-hover: #6b0000;
+            --dark: #0f172a;
+            --soft-bg: #f8fafc;
+            --white: #ffffff;
+            --border: #cbd5e1;
+            --success: #059669;
+            --text-main: #334155;
+            --focus-ring: #fca5a5;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: var(--soft-bg); color: var(--text-main); overflow-x: hidden; line-height: 1.6; }
+
+        /* --- Accesibilidad: Screen Reader Only --- */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+        /* --- Accesibilidad: Foco visible --- */
+        *:focus-visible { outline: 3px solid var(--uclm-red); outline-offset: 2px; }
+
+        /* --- Header Fijo (Sticky Header Pattern) --- */
+        header { background: var(--white); padding: 1rem 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 1000; }
+        .logo { font-weight: 800; font-size: 1.5rem; color: var(--uclm-red); text-decoration: none; }
+        
+        /* --- Indicador de Progreso (Progress Indicator Pattern) --- */
+        .progress-container { position: fixed; top: 65px; left: 0; width: 100%; height: 6px; background: #e2e8f0; z-index: 999; }
+        #progress-bar { height: 100%; width: 0%; background: var(--uclm-red); transition: width 0.4s ease-in-out; }
+
+        /* --- Gestión de Pantallas (Wizard / Stepper Pattern) --- */
+        main { min-height: calc(100vh - 70px); }
+        .screen { display: none; padding: 40px 20px; animation: fadeIn 0.4s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .container { max-width: 800px; margin: 0 auto; }
+        .card { background: var(--white); padding: 40px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+
+        h1, h2 { color: var(--dark); line-height: 1.2; }
+        h2 { font-size: 2rem; margin-bottom: 10px; color: var(--uclm-red); }
+        p.subtitle { color: #64748b; margin-bottom: 30px; font-size: 1.1rem; }
+
+        /* --- Formularios Accesibles --- */
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); font-size: 1.05rem; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 14px; border-radius: 10px; border: 2px solid var(--border); font-size: 1rem; font-family: inherit; transition: border-color 0.2s; }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus { border-color: var(--uclm-red); }
+
+        fieldset { border: none; margin-bottom: 30px; padding: 0; }
+        legend { font-weight: 700; color: var(--dark); font-size: 1.1rem; margin-bottom: 15px; width: 100%; border-bottom: 2px solid var(--border); padding-bottom: 5px; }
+
+        /* --- Tarjetas de Selección (Cards Pattern) --- */
+        .grid-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .opt-label { cursor: pointer; display: block; }
+        .opt-card { border: 2px solid var(--border); padding: 15px 20px; border-radius: 12px; background: var(--white); transition: all 0.2s ease; display: flex; align-items: center; gap: 10px; font-weight: 500; height: 100%; }
+        
+        /* Lógica visual conectada al input radio oculto */
+        .opt-label input:checked + .opt-card { border-color: var(--uclm-red); background: #fff5f5; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(139,0,0,0.1); }
+        .opt-label input:focus-visible + .opt-card { outline: 3px solid var(--uclm-red); outline-offset: 2px; }
+        .opt-card:hover { border-color: #94a3b8; background: #f8fafc; }
+
+        /* --- Botones (Call to Action Pattern) --- */
+        .btn-main { background: var(--dark); color: var(--white); width: 100%; padding: 18px; border: none; border-radius: 12px; font-size: 1.15rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease; margin-top: 10px; }
+        .btn-main:hover:not(:disabled) { background: var(--uclm-red); transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(139,0,0,0.3); }
+        .btn-main:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* --- Resultados (Lazy/Skeleton simulation & Data Display) --- */
+        .loading-state { text-align: center; padding: 50px; display: none; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--uclm-red); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; }
+        .match-card { background: var(--white); border-radius: 20px; overflow: hidden; border: 1px solid var(--border); position: relative; transition: transform 0.3s; display: flex; flex-direction: column; }
+        .match-card:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .match-label { position: absolute; top: 15px; right: 15px; background: var(--success); color: var(--white); padding: 6px 14px; border-radius: 50px; font-weight: 800; font-size: 0.85rem; z-index: 10; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .flat-hero { height: 180px; background-size: cover; background-position: center; background-color: #e2e8f0; }
+        .user-info { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+        .user-badge { display: inline-block; background: #f1f5f9; color: var(--dark); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; margin: 0 5px 10px 0; border: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="#" class="logo" aria-label="Inicio UniFlat ESIIAB">UniFlat ESIIAB</a>
+    <div id="nav-info" aria-live="polite" style="font-weight: 600;">Modo Invitado</div>
+</header>
+
+<div class="progress-container" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progress-aria">
+    <div id="progress-bar"></div>
+</div>
+
+<main>
+    <div id="scr-welcome" class="screen active" style="background: linear-gradient(rgba(15, 23, 42, 0.8), rgba(15, 23, 42, 0.8)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1200&q=80') center/cover;">
+        <div class="container" style="min-height: 70vh; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; text-align: center;">
+            <h1 style="font-size: clamp(2.5rem, 5vw, 4.5rem); font-weight: 800; color: white; margin-bottom: 20px;">CONVIVENCIA 1.0</h1>
+            <p style="font-size: 1.25rem; margin-bottom: 40px; max-width: 650px;">Encuentra compañeros de la ESIIAB con tu misma "sintaxis" de vida. Algoritmo de compatibilidad de 30 variables.</p>
+            <button type="button" class="btn-main" style="width: auto; padding: 20px 50px; background: var(--uclm-red);" onclick="navTo('scr-bio', 10)">Empezar Registro Seguro</button>
+        </div>
+    </div>
+
+    <div id="scr-bio" class="screen">
+        <div class="container">
+            <div class="card">
+                <h2 tabindex="-1" id="title-bio">Datos Académicos y Perfil</h2>
+                <p class="subtitle">Validado para estudiantes de informática de Albacete.</p>
+                
+                <form id="form-bio" onchange="validateForm('form-bio', 'btn-bio')">
+                    <div class="form-group">
+                        <label for="name">Nombre y Apellidos</label>
+                        <input type="text" id="name" name="name" placeholder="Ej: Francisco Díaz-Hellín" required aria-required="true">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="degree">Grado en la ESIIAB</label>
+                        <select id="degree" name="degree" required aria-required="true">
+                            <option value="">Selecciona tu titulación...</option>
+                            <option value="Computación">Ing. Informática (Computación)</option>
+                            <option value="Software">Ing. Informática (Software)</option>
+                            <option value="Sistemas">Ing. Informática (Sistemas)</option>
+                            <option value="Doble Grado">Doble Grado Inf/ADE</option>
+                        </select>
+                    </div>
+
+                    <fieldset>
+                        <legend>¿Cuál es tu situación actual?</legend>
+                        <div class="grid-options">
+                            <label class="opt-label">
+                                <input type="radio" name="situacion" value="busco" class="sr-only" required>
+                                <div class="opt-card">🔍 Busco piso/habitación</div>
+                            </label>
+                            <label class="opt-label">
+                                <input type="radio" name="situacion" value="tengo" class="sr-only" required>
+                                <div class="opt-card">🏠 Tengo piso, busco compañero</div>
+                            </label>
+                        </div>
+                    </fieldset>
+                </form>
+
+                <button type="button" id="btn-bio" class="btn-main" disabled onclick="saveBioAndNav('scr-convivencia', 30)">Siguiente: Convivencia Doméstica</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-convivencia" class="screen">
+        <div class="container">
+            <div class="card">
+                <h2 tabindex="-1" id="title-conv">I. Convivencia (10/30)</h2>
+                <p class="subtitle">Preguntas críticas para evitar discusiones en el piso.</p>
+                
+                <form id="form-conv" onchange="validateForm('form-conv', 'btn-conv')">
+                    <div id="q-container-conv"></div>
+                </form>
+
+                <button type="button" id="btn-conv" class="btn-main" disabled onclick="navTo('scr-estudio', 60)">Siguiente: Entorno de Estudio</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-estudio" class="screen">
+        <div class="container">
+            <div class="card">
+                <h2 tabindex="-1" id="title-estu">II. Estudio (20/30)</h2>
+                <p class="subtitle">El silencio en exámenes es innegociable en Ingeniería.</p>
+                
+                <form id="form-estu" onchange="validateForm('form-estu', 'btn-estu')">
+                    <div id="q-container-estu"></div>
+                </form>
+
+                <button type="button" id="btn-estu" class="btn-main" disabled onclick="navTo('scr-social', 85)">Siguiente: Estilo de Vida</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-social" class="screen">
+        <div class="container">
+            <div class="card">
+                <h2 tabindex="-1" id="title-soci">III. Estilo de Vida (30/30)</h2>
+                <p class="subtitle">Compatibilidad para el tiempo libre y fines de semana.</p>
+                
+                <form id="form-soci" onchange="validateForm('form-soci', 'btn-soci')">
+                    <div id="q-container-soci"></div>
+                </form>
+
+                <button type="button" id="btn-soci" class="btn-main" disabled onclick="calculateMatches()">Finalizar Cuestionario y Analizar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="scr-results" class="screen">
+        <div class="container" style="max-width: 1100px;">
+            <div id="loading-area" class="loading-state">
+                <div class="spinner"></div>
+                <h2 style="color: var(--dark);">Ejecutando algoritmo de Match...</h2>
+                <p>Comparando tus 30 respuestas con la base de datos de la ESIIAB.</p>
+            </div>
+
+            <div id="results-area" style="display: none;">
+                <h2 tabindex="-1" id="title-res">Resultados de Compatibilidad</h2>
+                <p class="subtitle">Hemos encontrado estos perfiles afines a tu estilo de vida.</p>
+                <div class="results-grid" id="res-grid" aria-live="polite"></div>
+                <button class="btn-main" style="margin-top: 40px; background: var(--white); color: var(--uclm-red); border: 2px solid var(--uclm-red);" onclick="location.reload()">Volver a empezar</button>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- ESTADO Y DATOS DE LA APLICACIÓN ---
+    const appState = {
+        name: '', degree: '', role: '',
+        answers: {}
+    };
+
+    // Batería de 30 preguntas
+    const questionsDB = {
+        conv: [
+            { id: 'c1', title: '1. Fregado de platos', opts: [{v: 'a', t: 'Inmediato al comer'}, {v: 'b', t: 'Acumulo y friego luego'}] },
+            { id: 'c2', title: '2. Limpieza común', opts: [{v: 'a', t: 'Calendario estricto'}, {v: 'b', t: 'Improvisada'}] },
+            { id: 'c3', title: '3. Gastos (aceite, sal)', opts: [{v: 'a', t: 'Bote común'}, {v: 'b', t: 'Cada uno lo suyo'}] },
+            { id: 'c4', title: '4. Basura/Reciclaje', opts: [{v: 'a', t: 'Turnos fijos'}, {v: 'b', t: 'El que vea que llena'}] },
+            { id: 'c5', title: '5. Compartir comida', opts: [{v: 'a', t: 'Cocinar juntos a veces'}, {v: 'b', t: 'Nevera separada al 100%'}] },
+            { id: 'c6', title: '6. Duchas', opts: [{v: 'a', t: 'Mañanas'}, {v: 'b', t: 'Noches'}] },
+            { id: 'c7', title: '7. Ruido cocina (noche)', opts: [{v: 'a', t: 'Silencio total'}, {v: 'b', t: 'No me importa'}] },
+            { id: 'c8', title: '8. Orden salón', opts: [{v: 'a', t: 'Siempre despejado'}, {v: 'b', t: 'Vivo entre mis cosas'}] },
+            { id: 'c9', title: '9. Compra súper', opts: [{v: 'a', t: 'Juntos (ahorro)'}, {v: 'b', t: 'Individual'}] },
+            { id: 'c10', title: '10. Nivel limpieza', opts: [{v: 'a', t: 'Quirófano (Alto)'}, {v: 'b', t: 'Relajado (Bajo)'}] }
+        ],
+        estu: [
+            { id: 'e1', title: '1. Época de exámenes', opts: [{v: 'a', t: 'Piso en silencio absoluto'}, {v: 'b', t: 'Sigo haciendo vida normal'}] },
+            { id: 'e2', title: '2. Lugar de estudio', opts: [{v: 'a', t: 'Mi habitación'}, {v: 'b', t: 'Salón / Comedor'}] },
+            { id: 'e3', title: '3. Ayuda prácticas', opts: [{v: 'a', t: 'Me encanta colaborar'}, {v: 'b', t: 'Cada uno su código'}] },
+            { id: 'e4', title: '4. Música al estudiar', opts: [{v: 'a', t: 'Me distrae (Silencio)'}, {v: 'b', t: 'Con música de fondo'}] },
+            { id: 'e5', title: '5. Productividad', opts: [{v: 'a', t: 'Mañanas (8:00-14:00)'}, {v: 'b', t: 'Noches (Búho)'}] },
+            { id: 'e6', title: '6. Visitas de estudio', opts: [{v: 'a', t: 'Máximo 2 personas'}, {v: 'b', t: 'Sin límite'}] },
+            { id: 'e7', title: '7. Hardware/Ruido', opts: [{v: 'a', t: 'Teclado mecánico'}, {v: 'b', t: 'Portátil silencioso'}] },
+            { id: 'e8', title: '8. Consumo café', opts: [{v: 'a', t: 'Adicto (Comparto cafetera)'}, {v: 'b', t: 'No tomo'}] },
+            { id: 'e9', title: '9. Pausas activas', opts: [{v: 'a', t: 'Charlamos 10 min'}, {v: 'b', t: 'Me encierro 5h'}] },
+            { id: 'e10', title: '10. Luz natural', opts: [{v: 'a', t: 'Persianas arriba'}, {v: 'b', t: 'Modo oscuro/Cueva'}] }
+        ],
+        soci: [
+            { id: 's1', title: '1. Visitas a dormir', opts: [{v: 'a', t: 'Solo findes'}, {v: 'b', t: 'Cualquier día'}] },
+            { id: 's2', title: '2. Fiestas en casa', opts: [{v: 'a', t: 'Nunca / Muy poco'}, {v: 'b', t: '¡Un jueves es un jueves!'}] },
+            { id: 's3', title: '3. Tabaco', opts: [{v: 'a', t: 'No fumador absoluto'}, {v: 'b', t: 'Fumador (Ventana)'}] },
+            { id: 's4', title: '4. Mascotas', opts: [{v: 'a', t: 'Sin animales'}, {v: 'b', t: 'Me encantan'}] },
+            { id: 's5', title: '5. Gaming salón', opts: [{v: 'a', t: 'Me uno a la partida'}, {v: 'b', t: 'Sin consolas en el salón'}] },
+            { id: 's6', title: '6. Fines de semana', opts: [{v: 'a', t: 'Me voy a mi pueblo'}, {v: 'b', t: 'Me quedo en Albacete'}] },
+            { id: 's7', title: '7. Alcohol social', opts: [{v: 'a', t: 'Moderado/Nulo'}, {v: 'b', t: 'Frecuente'}] },
+            { id: 's8', title: '8. Deporte/Gym', opts: [{v: 'a', t: 'Busco compi de gym'}, {v: 'b', t: 'Sedentario'}] },
+            { id: 's9', title: '9. Series conjuntas', opts: [{v: 'a', t: 'Me encanta hacer piña'}, {v: 'b', t: 'Prefiero verlo solo'}] },
+            { id: 's10', title: '10. Extroversión', opts: [{v: 'a', t: 'Hablamos mucho'}, {v: 'b', t: 'Soy reservado/discreto'}] }
+        ]
+    };
+
+    // Base de datos de perfiles simulados (Respuestas 'a' o 'b' a las 30 preguntas)
+    // Para simplificar la demo técnica, generamos un array de 30 respuestas fijas para cada mock
+    const mockProfiles = [
+        { 
+            name: "Carlos Camacho", degree: "3º Software", role: "tengo", price: 230, zone: "Campus", 
+            img: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=400&q=80",
+            tags: ["Estricto", "Silencioso", "Gamer"],
+            ans: { c1:'a',c2:'a',c3:'a',c4:'a',c5:'b',c6:'a',c7:'a',c8:'a',c9:'a',c10:'a', e1:'a',e2:'a',e3:'b',e4:'a',e5:'a',e6:'a',e7:'a',e8:'a',e9:'b',e10:'b', s1:'a',s2:'a',s3:'a',s4:'a',s5:'a',s6:'b',s7:'a',s8:'b',s9:'a',s10:'b' }
+        },
+        { 
+            name: "Francisco Hellín", degree: "1º Sistemas", role: "busco", price: 215, zone: "Zona Tunos", 
+            img: "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=400&q=80",
+            tags: ["Social", "Nocturno", "Deporte"],
+            ans: { c1:'b',c2:'b',c3:'a',c4:'b',c5:'a',c6:'b',c7:'b',c8:'b',c9:'b',c10:'b', e1:'b',e2:'b',e3:'a',e4:'b',e5:'b',e6:'b',e7:'b',e8:'a',e9:'a',e10:'a', s1:'b',s2:'b',s3:'b',s4:'b',s5:'a',s6:'a',s7:'b',s8:'a',s9:'a',s10:'a' }
+        },
+        { 
+            name: "Marcos Villalba", degree: "4º Computación", role: "tengo", price: 250, zone: "Avda. España", 
+            img: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=400&q=80",
+            tags: ["Flexible", "Madrugador", "Independiente"],
+            ans: { c1:'a',c2:'b',c3:'b',c4:'a',c5:'b',c6:'a',c7:'b',c8:'a',c9:'b',c10:'b', e1:'a',e2:'a',e3:'a',e4:'b',e5:'a',e6:'a',e7:'b',e8:'b',e9:'a',e10:'a', s1:'a',s2:'a',s3:'a',s4:'a',s5:'b',s6:'a',s7:'a',s8:'a',s9:'b',s10:'b' }
+        }
+    ];
+
+    // --- FUNCIONES DE RENDERIZADO Y LÓGICA ---
+
+    // 1. Renderizar cuestionarios dinámicamente
+    function renderQuestions(sectionId, containerId) {
+        const container = document.getElementById(containerId);
+        let html = '';
+        questionsDB[sectionId].forEach(q => {
+            html += `
+                <fieldset>
+                    <legend>${q.title}</legend>
+                    <div class="grid-options">
+                        <label class="opt-label">
+                            <input type="radio" name="${q.id}" value="${q.opts[0].v}" class="sr-only" required>
+                            <div class="opt-card">${q.opts[0].t}</div>
+                        </label>
+                        <label class="opt-label">
+                            <input type="radio" name="${q.id}" value="${q.opts[1].v}" class="sr-only" required>
+                            <div class="opt-card">${q.opts[1].t}</div>
+                        </label>
+                    </div>
+                </fieldset>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    // Inicializar DOM
+    document.addEventListener('DOMContentLoaded', () => {
+        renderQuestions('conv', 'q-container-conv');
+        renderQuestions('estu', 'q-container-estu');
+        renderQuestions('soci', 'q-container-soci');
+    });
+
+    // 2. Navegación y Accesibilidad (Foco)
+    function navTo(screenId, progressPercentage) {
+        // Ocultar todas
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        // Mostrar objetivo
+        const targetScreen = document.getElementById(screenId);
+        targetScreen.classList.add('active');
+        
+        // Actualizar barra y ARIA
+        const bar = document.getElementById('progress-bar');
+        const ariaContainer = document.getElementById('progress-aria');
+        bar.style.width = progressPercentage + '%';
+        ariaContainer.setAttribute('aria-valuenow', progressPercentage);
+
+        // Accesibilidad: Mover el foco al título de la nueva pantalla para lectores de pantalla
+        const title = targetScreen.querySelector('h2');
+        if(title) title.focus();
+        
+        window.scrollTo(0,0);
+    }
+
+    // 3. Validación de Formularios en tiempo real
+    function validateForm(formId, btnId) {
+        const form = document.getElementById(formId);
+        const btn = document.getElementById(btnId);
+        btn.disabled = !form.checkValidity(); // API de HTML5 nativa
+    }
+
+    // 4. Guardar Datos Básicos
+    function saveBioAndNav(nextScreen, prog) {
+        appState.name = document.getElementById('name').value;
+        appState.degree = document.getElementById('degree').value;
+        appState.role = document.querySelector('input[name="situacion"]:checked').value;
+        
+        document.getElementById('nav-info').innerText = "👤 " + appState.name;
+        navTo(nextScreen, prog);
+    }
+
+    // 5. Algoritmo de Cálculo de Match Real
+    function calculateMatches() {
+        navTo('scr-results', 100);
+        document.getElementById('loading-area').style.display = 'block';
+        document.getElementById('results-area').style.display = 'none';
+
+        // Recolectar todas las respuestas del usuario (30 inputs de radio)
+        const allForms = document.querySelectorAll('#form-conv, #form-estu, #form-soci');
+        allForms.forEach(form => {
+            const formData = new FormData(form);
+            for (let [key, value] of formData.entries()) {
+                appState.answers[key] = value;
+            }
+        });
+
+        // Simular tiempo de proceso para efecto "UX"
+        setTimeout(() => {
+            document.getElementById('loading-area').style.display = 'none';
+            document.getElementById('results-area').style.display = 'block';
+            
+            const grid = document.getElementById('res-grid');
+            grid.innerHTML = '';
+
+            // Filtrar perfiles lógicos (Si busco piso, mostrar los que tienen. Si tengo, mostrar los que buscan)
+            const targetRole = appState.role === 'busco' ? 'tengo' : 'busco';
+            let validProfiles = mockProfiles.filter(p => p.role === targetRole);
+            
+            // Si no hay opuestos suficientes en el mock, mostrar todos para la demo
+            if(validProfiles.length === 0) validProfiles = mockProfiles;
+
+            validProfiles.forEach(profile => {
+                let matchCount = 0;
+                // Comparar las 30 respuestas
+                for (const key in appState.answers) {
+                    if (appState.answers[key] === profile.ans[key]) {
+                        matchCount++;
+                    }
+                }
+                
+                // Calcular % (30 preguntas = 100%)
+                let matchPercentage = Math.round((matchCount / 30) * 100);
+                
+                // Bonus por estudiar lo mismo (+5%)
+                if(profile.degree.includes(appState.degree.split(' ')[0])) {
+                    matchPercentage = Math.min(100, matchPercentage + 5);
+                }
+
+                // Renderizar Tarjeta
+                grid.innerHTML += `
+                    <div class="match-card" tabindex="0">
+                        <div class="match-label">${matchPercentage}% COMPATIBILIDAD</div>
+                        <div class="flat-hero" style="background-image:url('${profile.img}')" role="img" aria-label="Foto de perfil/piso de ${profile.name}"></div>
+                        <div class="user-info">
+                            <h3 style="font-size: 1.4rem; color: var(--dark);">${profile.name}</h3>
+                            <p style="color:var(--uclm-red); font-weight:700; font-size:0.9rem; margin-bottom:10px;">${profile.degree}</p>
+                            <p style="font-size:0.9rem; color:#64748b; margin-bottom: 15px;">
+                                📍 ${profile.zone} <br> 💶 ${profile.price}€/mes
+                            </p>
+                            <div style="margin-bottom:auto;">
+                                ${profile.tags.map(t => `<span class="user-badge">${t}</span>`).join('')}
+                            </div>
+                            <button class="btn-main" style="padding:12px; margin-top:20px; font-size:1rem;" onclick="alert('Solicitud de contacto enviada a ${profile.name}')">Contactar</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Ordenar visualmente (CSS Flex/Grid no ordena automáticamente el DOM, pero para 3 items está bien)
+        }, 1500); // 1.5s de delay simulado
+    }
+</script>
+
+</body>
+</html>
